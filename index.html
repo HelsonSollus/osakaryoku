@@ -3,75 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Weather Analytics Dashboard | Azfar Shah</title>
+    <title>Azfar's Weather Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style>
         :root {
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #0f172a;
-            --primary: #2563eb;
+            --bg-earth: #f4f1ea;       /* Soft sandy/clay background */
+            --card-bg: #ffffff;        /* Clean crisp canvas */
+            --text-dark: #2c3e2b;      /* Deep forest green for text */
+            --forest-green: #3d6346;   /* Main structural accents */
+            --terracotta: #c87a53;     /* Earthy clay color */
+            --moss: #7a9a60;           /* Soft vegetation green */
+            --sky-mist: #a3b899;       /* Muted sage */
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: var(--bg-earth);
+            color: var(--text-dark);
             margin: 0;
             padding: 30px;
         }
+
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
         }
+
         header {
             text-align: center;
             margin-bottom: 35px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 15px;
+            padding-bottom: 10px;
         }
-        header h1 { margin: 5px 0; color: #1e3a8a; }
-        .url-tag { color: #64748b; font-family: monospace; font-size: 0.9rem; }
-        
+
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            color: var(--forest-green);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
         .status-msg {
             text-align: center;
             font-size: 1.1rem;
             padding: 40px;
-            background: var(--card);
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid #e1dcbe;
         }
         
         .location-banner {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 14px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(61, 99, 70, 0.06);
+            border-left: 6px solid var(--forest-green);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
+        .location-banner h2 {
+            margin: 0 0 5px 0;
+            color: var(--forest-green);
+        }
+
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
             gap: 25px;
         }
+
         .card {
-            background: var(--card);
-            border-radius: 12px;
+            background: var(--card-bg);
+            border-radius: 14px;
             padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e8e4cf;
+            box-sizing: border-box;
         }
+
         .card h3 {
             margin-top: 0;
-            border-left: 4px solid var(--primary);
-            padding-left: 10px;
-            color: #1e293b;
+            margin-bottom: 20px;
+            color: var(--forest-green);
+            font-size: 1.15rem;
+            border-bottom: 2px solid #f0ede0;
+            padding-bottom: 8px;
         }
+
         .chart-container {
             position: relative;
-            height: 320px;
+            height: 300px;
             width: 100%;
         }
     </style>
@@ -80,35 +106,41 @@
 
 <div class="container">
     <header>
-        <h1>Live API Weather Dashboard</h1>
-        <div class="url-tag">URL path: www.osakaryoku/azfarshah/weather1.0</div>
+        <h1>Azfar's Weather Dashboard</h1>
     </header>
 
-    <div id="status" class="status-msg">Fetching data from live Weather API...</div>
+    <div id="status" class="status-msg">Accessing live atmospheric registry...</div>
 
     <div id="dashboard" style="display: none;">
         <div class="location-banner">
             <div>
-                <h2 id="loc-name" style="margin:0; color:#1e293b;">City, Country</h2>
-                <span id="loc-condition" style="color:var(--primary); font-weight:600;">Condition</span>
+                <h2 id="loc-name">City, Country</h2>
+                <span id="loc-condition" style="text-transform: capitalize; font-weight: 600; color: var(--terracotta);">Condition</span>
             </div>
-            <div style="text-align: right; color: #64748b;">
-                Local Time: <strong id="loc-time">-</strong>
+            <div style="text-align: right; color: #556b2f; font-size: 0.95rem;">
+                Observation Timestamp: <strong id="loc-time" style="color: var(--forest-green);">-</strong>
             </div>
         </div>
 
         <div class="grid">
             <div class="card">
-                <h3>Temperature Assessment (°C)</h3>
+                <h3>Thermal Evaluation Metrics (°C)</h3>
                 <div class="chart-container">
-                    <canvas id="tempChart"></canvas>
+                    <canvas id="thermalChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
-                <h3>Atmospheric Conditions</h3>
+                <h3>Moisture, Cloudiness & UV Indexes (%)</h3>
                 <div class="chart-container">
-                    <canvas id="atmosphereChart"></canvas>
+                    <canvas id="moistureChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Kinetic Forces (Wind Speed & Barometric Pressure)</h3>
+                <div class="chart-container">
+                    <canvas id="kineticChart"></canvas>
                 </div>
             </div>
         </div>
@@ -116,96 +148,132 @@
 </div>
 
 <script>
-    // ================= MANDATORY API CONFIGURATION =================
-    // 1. Sign up for a quick free key at https://www.weatherapi.com/
-    // 2. Replace the string below with your actual API key
-    const API_KEY = 'fd81053931c3421ea04134950262506'; 
-    const CITY_QUERY = 'Kuala Lumpur'; 
+    // Register the DataLabels plugin to Chart.js globally
+    Chart.register(ChartDataLabels);
 
+    // API Setup
+    const API_KEY = 'YOUR_WEATHERAPI_KEY_HERE'; // Replace with your active WeatherAPI key
+    const CITY_QUERY = 'Kuala Lumpur'; 
     const ENDPOINT_URL = `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${encodeURIComponent(CITY_QUERY)}&aqi=no`;
 
-    async function getWeatherData() {
+    async function fetchEarthyWeatherData() {
         try {
             const response = await fetch(ENDPOINT_URL);
-            
-            if (!response.ok) {
-                throw new Error('Incomplete response. Please double check your API Key configuration.');
-            }
+            if (!response.ok) throw new Error('API key validation or node link failure.');
             
             const data = await response.json();
             
-            // Switch view states
             document.getElementById('status').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
 
-            // Populate text nodes
+            // Bind values to Document Object Model
             document.getElementById('loc-name').innerText = `${data.location.name}, ${data.location.country}`;
-            document.getElementById('loc-condition').innerText = data.current.condition.text;
-            document.getElementById('loc-time').innerText = data.location.localtime;
+            document.getElementById('loc-condition').innerText = `${data.current.condition.text} (Wind Direction: ${data.current.wind_dir})`;
+            document.getElementById('loc-time').innerText = data.current.last_updated;
 
-            // Send live numbers to Chart.js
-            buildVisualizations(data.current);
+            buildAnalyticalCharts(data.current);
 
         } catch (err) {
             console.error(err);
-            document.getElementById('status').innerText = `Error: ${err.message}. Make sure to replace YOUR_WEATHERAPI_KEY_HERE with your real key string inside the script tag line 99.`;
+            document.getElementById('status').innerText = `Configuration Halt: ${err.message}. Please insert your valid key on line 125.`;
         }
     }
 
-    function buildVisualizations(currentData) {
-        // --- VISUALIZATION 1: TEMPERATURE COMPARISON BAR CHART ---
-        const ctxTemp = document.getElementById('tempChart').getContext('2d');
-        new Chart(ctxTemp, {
-            type: 'bar',
-            data: {
-                labels: ['Actual Temp', 'Feels Like'],
-                datasets: [{
-                    label: 'Degrees Celsius (°C)',
-                    data: [currentData.temp_c, currentData.feelslike_c],
-                    backgroundColor: ['rgba(37, 99, 235, 0.7)', 'rgba(239, 68, 68, 0.7)'],
-                    borderColor: ['#2563eb', '#ef4444'],
-                    borderWidth: 1.5,
-                    barThickness: 55
-                }]
+    function buildAnalyticalCharts(current) {
+        // Shared gridline styling options to make the graph look highly detailed
+        const analyticalGridOpts = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#2c3e2b', font: { weight: 'bold' } } },
+                datalabels: {
+                    align: 'top',
+                    anchor: 'end',
+                    backgroundColor: '#3d6346',
+                    borderRadius: 4,
+                    color: '#ffffff',
+                    font: { size: 10, weight: 'bold' },
+                    formatter: (value) => Math.round(value)
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: '°C Value' } }
+            scales: {
+                x: {
+                    grid: { display: true, color: '#e4dfcb' }, // Sharp vertical grid lines
+                    ticks: { color: '#2c3e2b', font: { weight: '500' } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { display: true, color: '#e4dfcb' }, // Sharp horizontal grid lines
+                    ticks: { color: '#2c3e2b' }
                 }
             }
+        };
+
+        // --- CHART 1: THERMAL METRICS ---
+        const ctxThermal = document.getElementById('thermalChart').getContext('2d');
+        new Chart(ctxThermal, {
+            type: 'bar',
+            data: {
+                labels: ['Air Temperature', 'Feels Like Temp'],
+                datasets: [{
+                    label: 'Values in Celcius (°C)',
+                    data: [current.temp_c, current.feelslike_c],
+                    backgroundColor: ['rgba(122, 154, 96, 0.85)', 'rgba(200, 122, 83, 0.85)'],
+                    borderColor: ['#556b2f', '#c87a53'],
+                    borderWidth: 2,
+                    barThickness: 50
+                }]
+            },
+            options: analyticalGridOpts
         });
 
-        // --- VISUALIZATION 2: ATMOSPHERIC METRICS LINE CHART ---
-        const ctxAtm = document.getElementById('atmosphereChart').getContext('2d');
-        new Chart(ctxAtm, {
+        // --- CHART 2: MOISTURE & CLOUD COVER ---
+        const ctxMoisture = document.getElementById('moistureChart').getContext('2d');
+        new Chart(ctxMoisture, {
+            type: 'bar',
+            data: {
+                labels: ['Relative Humidity', 'Total Cloud Cover', 'UV Safety Index'],
+                datasets: [{
+                    label: 'Scale Matrix Percentage / Index',
+                    data: [current.humidity, current.cloud, current.uv],
+                    backgroundColor: ['rgba(61, 99, 70, 0.8)', 'rgba(163, 184, 153, 0.85)', 'rgba(218, 165, 32, 0.8)'],
+                    borderColor: ['#3d6346', '#a3b899', '#b8860b'],
+                    borderWidth: 2,
+                    barThickness: 45
+                }]
+            },
+            options: analyticalGridOpts
+        });
+
+        // --- CHART 3: KINETIC FORCES (WIND & PRESSURE) ---
+        const ctxKinetic = document.getElementById('kineticChart').getContext('2d');
+        
+        // Deep copy grid options for chart customization
+        let kineticOpts = JSON.parse(JSON.stringify(analyticalGridOpts));
+        // Remove the top datalabel anchor rule for lines so it formats nicely
+        kineticOpts.plugins.datalabels.align = 'right';
+
+        new Chart(ctxKinetic, {
             type: 'line',
             data: {
-                labels: ['Humidity (%)', 'Wind Speed (km/h)', 'Cloud Cover (%)', 'UV Index'],
+                labels: ['Wind Speed (km/h)', 'Precipitation (mm)', 'Gust Speed (km/h)'],
                 datasets: [{
-                    label: 'Current Conditions Indicator',
-                    data: [currentData.humidity, currentData.wind_kph, currentData.cloud, currentData.uv],
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    label: 'Velocity / Volume Force Metrics',
+                    data: [current.wind_kph, current.precip_mm, current.gust_kph],
+                    borderColor: '#c87a53',
+                    backgroundColor: 'rgba(200, 122, 83, 0.15)',
                     borderWidth: 3,
                     pointRadius: 6,
+                    pointBackgroundColor: '#3d6346',
                     tension: 0.1,
                     fill: true
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Value Matrix Scale' } }
-                }
-            }
+            options: kineticOpts
         });
     }
 
-    // Initialize execution loop
-    window.onload = getWeatherData;
+    window.onload = fetchEarthyWeatherData;
 </script>
 
 </body>
