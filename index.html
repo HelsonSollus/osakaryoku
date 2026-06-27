@@ -25,7 +25,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
         }
 
@@ -72,8 +72,8 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-            gap: 25px;
+            grid-template-columns: 1fr;
+            gap: 30px;
         }
 
         .card {
@@ -96,7 +96,7 @@
 
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 350px;
             width: 100%;
         }
     </style>
@@ -108,36 +108,36 @@
         <h1>Azfar's Weather Dashboard</h1>
     </header>
 
-    <div id="status" class="status-msg">Accessing live atmospheric registry...</div>
+    <div id="status" class="status-msg">Accessing live chronological atmospheric registry...</div>
 
     <div id="dashboard" style="display: none;">
         <div class="location-banner">
             <div>
                 <h2 id="loc-name">City, Country</h2>
-                <span id="loc-condition" style="text-transform: capitalize; font-weight: 600; color: var(--terracotta);">Condition</span>
+                <span id="loc-condition" style="text-transform: capitalize; font-weight: 600; color: var(--terracotta);">Dynamic Timeline Overview</span>
             </div>
             <div style="text-align: right; color: #556b2f; font-size: 0.95rem;">
-                Observation Timestamp: <strong id="loc-time" style="color: var(--forest-green);">-</strong>
+                System Run Time: <strong id="loc-time" style="color: var(--forest-green);">-</strong>
             </div>
         </div>
 
         <div class="grid">
             <div class="card">
-                <h3>Thermal Evaluation Metrics (°C)</h3>
+                <h3>Chronological Thermal Progression Pipeline (°C)</h3>
                 <div class="chart-container">
                     <canvas id="thermalChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
-                <h3>Moisture, Cloudiness & UV Indexes (%)</h3>
+                <h3>Moisture Dynamics & Cloud Dispersion Timeline (%)</h3>
                 <div class="chart-container">
                     <canvas id="moistureChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
-                <h3>Kinetic Forces (Wind Speed & Barometric Pressure)</h3>
+                <h3>Kinetic Velocity Vectors (Wind Speed & Gust Trends)</h3>
                 <div class="chart-container">
                     <canvas id="kineticChart"></canvas>
                 </div>
@@ -147,15 +147,16 @@
 </div>
 
 <script>
-    // API Setup
-    const API_KEY = 'fd81053931c3421ea04134950262506'; // Make sure your active WeatherAPI key is pasted here
+    // API Configurations
+    const API_KEY = 'YOUR_WEATHERAPI_KEY_HERE'; // Ensure your active key is written here
     const CITY_QUERY = 'Kuala Lumpur'; 
-    const ENDPOINT_URL = `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${encodeURIComponent(CITY_QUERY)}&aqi=no`;
+    // Shifted endpoint to forecast.json to parse historical 24-hour timeline matrices
+    const ENDPOINT_URL = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${encodeURIComponent(CITY_QUERY)}&days=1&aqi=no&alerts=no`;
 
-    async function fetchEarthyWeatherData() {
+    async function fetchChronologicalWeatherData() {
         try {
             const response = await fetch(ENDPOINT_URL);
-            if (!response.ok) throw new Error('API key validation or node link failure.');
+            if (!response.ok) throw new Error('API communication block or invalid key configurations.');
             
             const data = await response.json();
             
@@ -163,98 +164,142 @@
             document.getElementById('dashboard').style.display = 'block';
 
             document.getElementById('loc-name').innerText = `${data.location.name}, ${data.location.country}`;
-            document.getElementById('loc-condition').innerText = `${data.current.condition.text} (Wind Direction: ${data.current.wind_dir})`;
-            document.getElementById('loc-time').innerText = data.current.last_updated;
+            document.getElementById('loc-time').innerText = data.location.localtime;
 
-            buildAnalyticalCharts(data.current);
+            // Extract the 24 hourly data points array
+            const hourlyArray = data.forecast.forecastday[0].hour;
+            
+            buildTimelineCharts(hourlyArray);
 
         } catch (err) {
             console.error(err);
-            document.getElementById('status').innerText = `Configuration Halt: ${err.message}. Please check your key value configuration.`;
+            document.getElementById('status').innerText = `Configuration Halt: ${err.message}. Ensure your key structure is correct.`;
         }
     }
 
-    function buildAnalyticalCharts(current) {
-        // Built-in analytical options configuration with explicit gridlines
-        const analyticalGridOpts = {
+    function buildTimelineCharts(hours) {
+        // Step 1: Format date and time for the horizontal axis labels
+        // We will filter or sample data points to ensure the text axis lines look neat and clean
+        const labelsTimeline = hours.map(item => {
+            // item.time looks like "2026-06-27 15:00"
+            const parts = item.time.split(' ');
+            const datePart = parts[0].substring(5); // Extracts MM-DD format (e.g. "06-27")
+            const timePart = parts[1];             // Extracts HH:MM format (e.g. "15:00")
+            return `${timePart} (${datePart})`;    // Yields cleanly structured format: "15:00 (06-27)"
+        });
+
+        // Step 2: Extract timeline metrics arrays
+        const tempValues = hours.map(item => item.temp_c);
+        const humidityValues = hours.map(item => item.humidity);
+        const cloudValues = hours.map(item => item.cloud);
+        const windValues = hours.map(item => item.wind_kph);
+        const gustValues = hours.map(item => item.gust_kph);
+
+        // Standard timeline design configurations
+        const timelineBaseOptions = {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: { labels: { color: '#2c3e2b', font: { weight: 'bold' } } },
-                tooltip: { enabled: true } // Tooltips show exact data cleanly when hovering
+                tooltip: { enabled: true }
             },
             scales: {
                 x: {
                     grid: { display: true, color: '#e4dfcb' },
-                    ticks: { color: '#2c3e2b', font: { weight: '500' } }
+                    ticks: { color: '#2c3e2b', maxRotation: 45, minRotation: 45, font: { size: 10, weight: '500' } }
                 },
                 y: {
-                    beginAtZero: true,
+                    beginAtZero: false,
                     grid: { display: true, color: '#e4dfcb' },
                     ticks: { color: '#2c3e2b' }
                 }
             }
         };
 
-        // --- CHART 1: THERMAL METRICS ---
+        // --- CHART 1: THERMAL PROFILE (LINE PATTERN) ---
+        // Changed to line charts because showing hourly chronological tracking trends over 24 points fits beautifully as an analytical wave line!
         const ctxThermal = document.getElementById('thermalChart').getContext('2d');
         new Chart(ctxThermal, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: ['Air Temperature', 'Feels Like Temp'],
+                labels: labelsTimeline,
                 datasets: [{
-                    label: 'Values in Celsius (°C)',
-                    data: [current.temp_c, current.feelslike_c],
-                    backgroundColor: ['rgba(122, 154, 96, 0.85)', 'rgba(200, 122, 83, 0.85)'],
-                    borderColor: ['#556b2f', '#c87a53'],
-                    borderWidth: 2,
-                    barThickness: 50
+                    label: 'Air Temperature (°C)',
+                    data: tempValues,
+                    borderColor: '#c87a53',
+                    backgroundColor: 'rgba(200, 122, 83, 0.1)',
+                    borderWidth: 3,
+                    pointRadius: 2,
+                    tension: 0.2,
+                    fill: true
                 }]
             },
-            options: analyticalGridOpts
+            options: timelineBaseOptions
         });
 
-        // --- CHART 2: MOISTURE & CLOUD COVER ---
+        // --- CHART 2: MOISTURE & CLOUD COVER PROGRESSION ---
         const ctxMoisture = document.getElementById('moistureChart').getContext('2d');
         new Chart(ctxMoisture, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: ['Relative Humidity (%)', 'Total Cloud Cover (%)', 'UV Safety Index'],
-                datasets: [{
-                    label: 'Scale Matrix Value',
-                    data: [current.humidity, current.cloud, current.uv],
-                    backgroundColor: ['rgba(61, 99, 70, 0.8)', 'rgba(163, 184, 153, 0.85)', 'rgba(218, 165, 32, 0.8)'],
-                    borderColor: ['#3d6346', '#a3b899', '#b8860b'],
-                    borderWidth: 2,
-                    barThickness: 45
-                }]
+                labels: labelsTimeline,
+                datasets: [
+                    {
+                        label: 'Relative Humidity (%)',
+                        data: humidityValues,
+                        borderColor: '#3d6346',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Cloud Coverage (%)',
+                        data: cloudValues,
+                        borderColor: '#a3b899',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        tension: 0.2
+                    }
+                ]
             },
-            options: analyticalGridOpts
+            options: timelineBaseOptions
         });
 
-        // --- CHART 3: KINETIC FORCES ---
+        // --- CHART 3: KINETIC VELOCITY TRENDS ---
         const ctxKinetic = document.getElementById('kineticChart').getContext('2d');
         new Chart(ctxKinetic, {
             type: 'line',
             data: {
-                labels: ['Wind Speed (km/h)', 'Precipitation (mm)', 'Gust Speed (km/h)'],
-                datasets: [{
-                    label: 'Velocity / Volume Force Metrics',
-                    data: [current.wind_kph, current.precip_mm, current.gust_kph],
-                    borderColor: '#c87a53',
-                    backgroundColor: 'rgba(200, 122, 83, 0.15)',
-                    borderWidth: 3,
-                    pointRadius: 6,
-                    pointBackgroundColor: '#3d6346',
-                    tension: 0.1,
-                    fill: true
-                }]
+                labels: labelsTimeline,
+                datasets: [
+                    {
+                        label: 'Wind Speed (km/h)',
+                        data: windValues,
+                        borderColor: '#7a9a60',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        tension: 0.2
+                    },
+                    {
+                        label: 'Gust Speed (km/h)',
+                        data: gustValues,
+                        borderColor: '#b8860b',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        tension: 0.2
+                    }
+                ]
             },
-            options: analyticalGridOpts
+            options: timelineBaseOptions
         });
     }
 
-    window.onload = fetchEarthyWeatherData;
+    window.onload = fetchChronologicalWeatherData;
 </script>
 
 </body>
